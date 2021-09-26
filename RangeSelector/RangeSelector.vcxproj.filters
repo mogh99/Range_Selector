@@ -57,6 +57,9 @@
     <ClCompile Include="external\implot\implot_items.cpp">
       <Filter>implot</Filter>
     </ClCompile>
+    <ClCompile Include="src\Data.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\imgui\imgui_impl_glfw.h">
