@@ -6,6 +6,7 @@
 #include <iomanip>
 
 #include "Data.cpp"
+#include "Range.cpp"
 
 const int RAPIDMINER_DOUBLE_PRECISION = 9;
 
@@ -82,14 +83,31 @@ void writeCSVFile(std::string filePath, Data data) {
 	file.close();
 }
 
+void deleteUnwantedRange(Data* normalData, Range* range) {
+	normalData->numberOfRows -= (range->endIdx+1 - range->startIdx);
+
+	for (int i = 0; i < normalData->numberOfColumns; i++) {
+		normalData->columns.at(i).values.erase(normalData->columns.at(i).values.begin() + range->startIdx, normalData->columns.at(i).values.begin() + range->endIdx + 1);
+	}
+
+}
+
+void undoSelectedRange() {
+
+}
+
 void main() {
 	std::cout.precision(RAPIDMINER_DOUBLE_PRECISION);
 
 	std::string fileName = "ExampleSet.csv";
 
 	Data data = parseCSVFile(fileName);
+	Data normalData = data;
+	std::vector<Range> ranges;
+	ranges.push_back({ 0.0 , 0.0 , 5, 6 });
+
+	deleteUnwantedRange(&normalData, &ranges.at(0));
 
 	std::string newFileName = "ExampleSetNew.csv";
-
-	writeCSVFile(newFileName, data);
+	writeCSVFile(newFileName, normalData);
 }

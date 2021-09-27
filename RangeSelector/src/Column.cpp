@@ -1,5 +1,5 @@
-#ifndef SENSOR
-#define SENSOR
+#ifndef COLUMN
+#define COLUMN
 
 #include <string>
 #include <vector>

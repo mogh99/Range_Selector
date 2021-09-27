@@ -32,6 +32,7 @@
     <ClCompile Include="src\Column.cpp" />
     <ClCompile Include="src\Data.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Range.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\imgui\imconfig.h" />

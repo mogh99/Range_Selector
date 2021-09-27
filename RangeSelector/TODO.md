@@ -15,3 +15,22 @@
 ### Info:
 * RapidMiner date format MM/DD/YY HH:MM AM/PM
 * RapidMiner give the value precision to the 9th decimal
+
+
+## PSUDO CODE
+DELETE UNWANTED RANGE:
+1. Select unwanted range.
+2. Determine the start and end of the unwanted range.
+3. for point in DATA:
+	if point not inside unwanted range:
+		NORMAL_RANGE.append(point)
+4. Return NORMAL_RANGE.
+
+UNDO SELECTED RANGE:
+1. Select the wanted range to undo.
+2. The range has the start index and the end index.
+3. Creat a loop that loop through the values form the start index to the end index
+4. for(START_IDX; START_IDX <= END_IDX; START_IDX++){
+	NORMAL_RANGE.insert(START_IDX, DATA.at(START_IDX));
+}
+5. Return NORMAL_RANGE
