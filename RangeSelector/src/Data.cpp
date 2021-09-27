@@ -1,14 +1,17 @@
+#ifndef DATA
+#define DATA
+
 #include <string>
 #include <vector>
 
-class Sensor {
-public:
-	std::string name;
-	std::vector<float> values;
-};
+#include "Column.cpp"
 
 class Data {
 public:
-	std::vector<Sensor> sensors;
+	int numberOfRows;
+	int numberOfColumns;
+	std::string fileName;
+	std::vector<Column> columns;
 };
 
+#endif

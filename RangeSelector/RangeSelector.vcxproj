@@ -29,6 +29,7 @@
     <ClCompile Include="external\implot\implot.cpp" />
     <ClCompile Include="external\implot\implot_demo.cpp" />
     <ClCompile Include="external\implot\implot_items.cpp" />
+    <ClCompile Include="src\Column.cpp" />
     <ClCompile Include="src\Data.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
