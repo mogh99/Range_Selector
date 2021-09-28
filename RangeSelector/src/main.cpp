@@ -79,7 +79,7 @@ int main() {
 			ImGui::NewFrame();
 			if (ImPlot::BeginPlot("Test Plot", NULL, NULL)) {
 				for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
-					ImPlot::PlotScatter("testaaaa" + i, &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+					ImPlot::PlotLine("testaaaa" + i, &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
 				}
 				ImPlot::EndPlot();
 			}
