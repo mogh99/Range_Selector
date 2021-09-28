@@ -83,17 +83,29 @@ void writeCSVFile(std::string filePath, Data data) {
 	file.close();
 }
 
-void deleteUnwantedRange(Data* normalData, Range* range) {
-	normalData->numberOfRows -= (range->endIdx+1 - range->startIdx);
+void deleteUnwantedRange(Data* normalData, Range* selectedRange) {
+	// Update the numberOfRows by calculating the range [(endIdx - startIdx) + 1]
+	// One is added because we remove also the endIdx
+	normalData->numberOfRows -= (selectedRange->endIdx+1 - selectedRange->startIdx);
 
+	// Loop through the data and remove the range using the startIdx and endIdx
 	for (int i = 0; i < normalData->numberOfColumns; i++) {
-		normalData->columns.at(i).values.erase(normalData->columns.at(i).values.begin() + range->startIdx, normalData->columns.at(i).values.begin() + range->endIdx + 1);
+		normalData->columns.at(i).values.erase(normalData->columns.at(i).values.begin() + selectedRange->startIdx, 
+											   normalData->columns.at(i).values.begin() + selectedRange->endIdx + 1);
 	}
-
 }
 
-void undoSelectedRange() {
+void undoSelectedRange(Data* data, Data* normalData, std::vector<Range>* ranges, Range* undoRange) {
+	// Remove the undoRange from the std::vector<Range>
+	std::erase(*ranges, *undoRange);
+	
+	// Make the normalData equal the original data and remove the unwanted ranges
+	*normalData = *data;
 
+	// Remove the unwanted ranges
+	for (int i = 0; i < ranges->size(); i++) {
+		deleteUnwantedRange(normalData, &ranges->at(i));
+	}
 }
 
 void main() {
@@ -104,9 +116,17 @@ void main() {
 	Data data = parseCSVFile(fileName);
 	Data normalData = data;
 	std::vector<Range> ranges;
-	ranges.push_back({ 0.0 , 0.0 , 5, 6 });
+	Range range1 = { 1.5673536E12 , 1.5673716E12 , 19, 24 };
+	Range range2 = { 1.5674616E12 , 1.5674796E12 , 49, 54 };
+	ranges.push_back(range1);
+	deleteUnwantedRange(&normalData, &range1);
 
-	deleteUnwantedRange(&normalData, &ranges.at(0));
+	ranges.push_back(range2);
+	deleteUnwantedRange(&normalData, &range2);
+
+
+	undoSelectedRange(&data, &normalData, &ranges, &range1);
+	undoSelectedRange(&data, &normalData, &ranges, &range2);
 
 	std::string newFileName = "ExampleSetNew.csv";
 	writeCSVFile(newFileName, normalData);
