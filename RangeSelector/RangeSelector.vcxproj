@@ -31,6 +31,7 @@
     <ClCompile Include="external\implot\implot_items.cpp" />
     <ClCompile Include="src\Column.cpp" />
     <ClCompile Include="src\Data.cpp" />
+    <ClCompile Include="src\Helpers.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Range.cpp" />
   </ItemGroup>
@@ -46,6 +47,8 @@
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\implot\implot.h" />
     <ClInclude Include="external\implot\implot_internal.h" />
+    <ClInclude Include="src\Constants.h" />
+    <ClInclude Include="src\Helpers.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -1,133 +1,99 @@
 #include <iostream>
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <stdexcept>
-#include <iomanip>
+
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
+#include "implot.h"
+
+#include <GLFW/glfw3.h>
+
+#if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
+#pragma comment(lib, "legacy_stdio_definitions")
+#endif
 
 #include "Data.cpp"
 #include "Range.cpp"
 
-const int RAPIDMINER_DOUBLE_PRECISION = 9;
+#include "Helpers.h"
+#include "Constants.h"
 
-Data parseCSVFile(std::string fileName) {
-
-	Data data;
-	data.fileName = fileName;
-	std::ifstream file(fileName);
-
-	// Check if the file was opened correctly
-	if (!file.is_open()) {
-		throw std::runtime_error("ERROR: Failed To Open The File" + fileName);
-	}
-
-	// Helper variables to parse the date.
-	std::string line, colname;
-	double val;
-	const std::string TIMESTAMP = "Timestamp";
-
-	// Read the column names
-	if (file.good()) {
-		std::getline(file, line);
-		std::stringstream ss(line);
-
-		int idx = 0;
-		while (std::getline(ss, colname, ',')) {
-			data.columns.push_back({ TIMESTAMP.compare(colname) ? false : true, idx, colname, std::vector<double> {} });
-			idx += 1;
-		}
-		data.numberOfColumns = idx;
-	}
-
-	// Read the data row by row
-	while (std::getline(file, line)) {
-		std::stringstream ss(line);
-		int colIdx = 0;
-
-		while (ss >> val) {
-			data.columns.at(colIdx).values.push_back(val);
-
-			if (ss.peek() == ',') ss.ignore();
-
-			colIdx++;
-		}
-	}
-
-	data.numberOfRows = data.columns.at(0).values.size();
-
-	// Close file
-	file.close();
-
-	return data;
+static void glfw_error_callback(int error, const char* description)
+{
+	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void writeCSVFile(std::string filePath, Data data) {
-	std::ofstream file(filePath);
+int main() {
+	// Set the reading and writing precision to 
+	std::cout.precision(DOUBLE_PRECISION);
 
-	// Write the sensor names and the timestamp.
-	for (int i = 0; i < data.numberOfColumns; i++) {
-		file << data.columns.at(i).name;
-		if (i != data.numberOfColumns - 1) file << ',';
-	}
-	file << "\n";
-
-
-	for (int i = 0; i < data.numberOfRows; ++i) {
-		for (int j = 0; j < data.numberOfColumns; ++j){
-			file << std::setprecision(RAPIDMINER_DOUBLE_PRECISION) << data.columns.at(j).values.at(i);
-			if (j != data.numberOfColumns - 1) file << ","; // No comma at end of line
-		}
-		file << "\n";
-	}
-
-	file.close();
-}
-
-void deleteUnwantedRange(Data* normalData, Range* selectedRange) {
-	// Update the numberOfRows by calculating the range [(endIdx - startIdx) + 1]
-	// One is added because we remove also the endIdx
-	normalData->numberOfRows -= (selectedRange->endIdx+1 - selectedRange->startIdx);
-
-	// Loop through the data and remove the range using the startIdx and endIdx
-	for (int i = 0; i < normalData->numberOfColumns; i++) {
-		normalData->columns.at(i).values.erase(normalData->columns.at(i).values.begin() + selectedRange->startIdx, 
-											   normalData->columns.at(i).values.begin() + selectedRange->endIdx + 1);
-	}
-}
-
-void undoSelectedRange(Data* data, Data* normalData, std::vector<Range>* ranges, Range* undoRange) {
-	// Remove the undoRange from the std::vector<Range>
-	std::erase(*ranges, *undoRange);
-	
-	// Make the normalData equal the original data and remove the unwanted ranges
-	*normalData = *data;
-
-	// Remove the unwanted ranges
-	for (int i = 0; i < ranges->size(); i++) {
-		deleteUnwantedRange(normalData, &ranges->at(i));
-	}
-}
-
-void main() {
-	std::cout.precision(RAPIDMINER_DOUBLE_PRECISION);
-
+	// Reading the data as Data object
 	std::string fileName = "ExampleSet.csv";
-
 	Data data = parseCSVFile(fileName);
 	Data normalData = data;
 	std::vector<Range> ranges;
-	Range range1 = { 1.5673536E12 , 1.5673716E12 , 19, 24 };
-	Range range2 = { 1.5674616E12 , 1.5674796E12 , 49, 54 };
-	ranges.push_back(range1);
-	deleteUnwantedRange(&normalData, &range1);
 
-	ranges.push_back(range2);
-	deleteUnwantedRange(&normalData, &range2);
+	// Setup window
+	glfwSetErrorCallback(glfw_error_callback);
+	if (!glfwInit())
+		return 1;
 
+	// GL 3.0 + GLSL 130
+	const char* glsl_version = "#version 130";
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
-	undoSelectedRange(&data, &normalData, &ranges, &range1);
-	undoSelectedRange(&data, &normalData, &ranges, &range2);
+	// Create window with graphics context
+	GLFWwindow* window = glfwCreateWindow(1280, 720, "Range Selector", NULL, NULL);
+	if (window == NULL)
+		return 1;
+	glfwMakeContextCurrent(window);
+	glfwSwapInterval(1); // Enable vsync
 
-	std::string newFileName = "ExampleSetNew.csv";
-	writeCSVFile(newFileName, normalData);
+	// Setup Dear ImGui context and ImPlot context
+	IMGUI_CHECKVERSION();
+	ImGui::CreateContext();
+	ImPlot::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+
+	// Setup Dear ImGui style
+	ImGui::StyleColorsDark();
+
+	// Setup Platform/Renderer backends
+	ImGui_ImplGlfw_InitForOpenGL(window, true);
+	ImGui_ImplOpenGL3_Init(glsl_version);
+	
+	// ImGui window values
+	ImVec4 backgroundColor = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
+	
+	double* a = &normalData.columns.at(0).values[0];
+
+	while (!glfwWindowShouldClose(window)) {
+		
+			glfwPollEvents();
+
+			// Start the Dear ImGui frame
+			ImGui_ImplOpenGL3_NewFrame();
+			ImGui_ImplGlfw_NewFrame();
+			ImGui::NewFrame();
+			if (ImPlot::BeginPlot("Test Plot", NULL, NULL)) {
+				for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
+					ImPlot::PlotScatter("testaaaa" + i, &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+				}
+				ImPlot::EndPlot();
+			}
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+			// Rendering
+			ImGui::Render();
+			int display_w, display_h;
+			glfwGetFramebufferSize(window, &display_w, &display_h);
+			glViewport(0, 0, display_w, display_h);
+			glClearColor(backgroundColor.x * backgroundColor.w, backgroundColor.y * backgroundColor.w, backgroundColor.z * backgroundColor.w, backgroundColor.w);
+			glClear(GL_COLOR_BUFFER_BIT);
+			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+			glfwSwapBuffers(window);
+			glfwWaitEvents();
+	}
 }
