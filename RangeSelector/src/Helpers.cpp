@@ -41,7 +41,13 @@ Data parseCSVFile(std::string fileName) {
 		int colIdx = 0;
 
 		while (ss >> val) {
-			data.columns.at(colIdx).values.push_back(val);
+			// Divide the timestamp date by 1000 to be compatible with ImPlot
+			if (data.columns.at(colIdx).isTimeStamp) {
+				data.columns.at(colIdx).values.push_back(val / 1000);
+			}
+			else {
+				data.columns.at(colIdx).values.push_back(val);
+			}
 
 			if (ss.peek() == ',') ss.ignore();
 
@@ -70,7 +76,14 @@ void writeCSVFile(std::string filePath, Data data) {
 
 	for (int i = 0; i < data.numberOfRows; ++i) {
 		for (int j = 0; j < data.numberOfColumns; ++j) {
-			file << std::setprecision(DOUBLE_PRECISION) << data.columns.at(j).values.at(i);
+			// Multiply the timestamp date by 1000 to be compatible with RapidMiner
+			if (data.columns.at(j).isTimeStamp) {
+				file << std::setprecision(DOUBLE_PRECISION) << data.columns.at(j).values.at(i) * 1000;
+			}
+			else {
+				file << std::setprecision(DOUBLE_PRECISION) << data.columns.at(j).values.at(i);
+			}
+
 			if (j != data.numberOfColumns - 1) file << ","; // No comma at end of line
 		}
 		file << "\n";

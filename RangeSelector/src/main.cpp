@@ -59,6 +59,7 @@ int main() {
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
+	ImPlot::GetStyle().UseLocalTime;
 
 	// Setup Platform/Renderer backends
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -77,7 +78,9 @@ int main() {
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
-			if (ImPlot::BeginPlot("Test Plot", NULL, NULL)) {
+			//ImPlot::ShowDemoWindow();
+
+			if (ImPlot::BeginPlot("Test Plot", NULL, NULL, ImVec2(-1, 0), NULL, ImPlotAxisFlags_Time)) {
 				for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
 					ImPlot::PlotLine("testaaaa" + i, &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
 				}
