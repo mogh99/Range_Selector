@@ -56,6 +56,7 @@ int main() {
 	ImGui::CreateContext();
 	ImPlot::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 
 	// Setup Dear ImGui style
 	ImGui::StyleColorsDark();
