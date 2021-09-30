@@ -36,7 +36,7 @@ const ImGuiWindowFlags IMGUI_WINDOW_FLAGS = (ImGuiWindowFlags_NoTitleBar
 ImVec2 section1Size;
 
 // 2. Section1 Constants
-
+const ImPlotFlags SECTION1_FLAGS = (ImPlotFlags_Query | ImPlotFlags_NoTitle);
 
 
 // Section2: A subplot of two windows, the small zoom window and The selected ranges table
