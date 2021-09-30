@@ -122,12 +122,24 @@ int main() {
 			if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
 				for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
 					// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
-					ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+					ImPlot::PlotScatter(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
 				}
 
 				// Check if the plot is queried or not
-				if (ImPlot::IsPlotQueried()) 
+				if (ImPlot::IsPlotQueried()) {
+					ImPlotLimits queriedLimit = ImPlot::GetPlotQuery();
+
+					int startDate = (int)queriedLimit.X.Min - (int)queriedLimit.X.Min % 3600;
+					int endDate = (int) queriedLimit.X.Max + (3600 - (int)queriedLimit.X.Max % 3600);
+
+					int startIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), startDate));
+					int endIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), endDate));
+
+					std::cout << "start idx = " << startIdx << ", X Min = " << queriedLimit.X.Min << std::endl;
+					std::cout << "end idx = " << endIdx << ", X Max = " << queriedLimit.X.Max << std::endl;
+
 					isRangeSelected = true;
+				}
 				else 
 					isRangeSelected = false;
 				
