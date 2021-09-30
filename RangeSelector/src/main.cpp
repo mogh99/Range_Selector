@@ -44,10 +44,29 @@ int main() {
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
 
+	GLFWwindow* window;
+	int count;
+	GLFWmonitor** monitors = glfwGetMonitors(&count);
+	const GLFWvidmode* videoMode = glfwGetVideoMode(monitors[0]);
+
+	// Variables to make the window resize dynamically
+	int windowWidth, windowHeight;
+	windowWidth = videoMode->width * (2.0 / 3.0);
+	windowHeight = videoMode->height * (2.0 / 3.0);
+
 	// Create window with graphics context
-	GLFWwindow* window = glfwCreateWindow(1280, 720, "Range Selector", NULL, NULL);
+	window = glfwCreateWindow(windowWidth, windowHeight, "Range Selector", NULL, NULL);
 	if (window == NULL)
 		return 1;
+
+	// Reset the window hints to default
+	glfwDefaultWindowHints();
+
+	// Set the window position 
+	glfwSetWindowPos(window, (videoMode->width - windowWidth) / 2, (videoMode->height - windowHeight) / 2);
+
+	// Show the window
+	glfwShowWindow(window);
 	glfwMakeContextCurrent(window);
 	glfwSwapInterval(1); // Enable vsync
 
@@ -68,9 +87,10 @@ int main() {
 	
 	// ImGui window values
 	ImVec4 backgroundColor = ImVec4(0.1f, 0.1f, 0.1f, 1.00f);
+	int imguiWindowWidth = windowWidth;
+	int imguiWindowHeight = windowHeight;
+	ImVec2 imguiWindowSize = ImVec2(imguiWindowWidth, imguiWindowHeight);
 	
-	double* a = &normalData.columns.at(0).values[0];
-
 	while (!glfwWindowShouldClose(window)) {
 		
 			glfwPollEvents();
@@ -79,15 +99,27 @@ int main() {
 			ImGui_ImplOpenGL3_NewFrame();
 			ImGui_ImplGlfw_NewFrame();
 			ImGui::NewFrame();
-			//ImPlot::ShowDemoWindow();
+			ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
+
+			// Set the window position to (0, 0) top left corner
+			ImGui::SetWindowPos(IMGUI_WINDOW_POS, 0);
+
+			// Get the new window size incase of user modifications and update the imgui size
+			glfwGetWindowSize(window, &imguiWindowWidth, &imguiWindowHeight);
+			imguiWindowSize.x = imguiWindowWidth;
+			imguiWindowSize.y = imguiWindowHeight;
+			ImGui::SetWindowSize(imguiWindowSize, 0);
 
 			if (ImPlot::BeginPlot("Test Plot", NULL, NULL, ImVec2(-1, 0), NULL, ImPlotAxisFlags_Time)) {
 				for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
-					ImPlot::PlotLine("testaaaa" + i, &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+					// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
+					ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
 				}
 				ImPlot::EndPlot();
 			}
 			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+			ImGui::End();
 
 			// Rendering
 			ImGui::Render();
