@@ -107,7 +107,7 @@
     <ClInclude Include="src\Helpers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Constants.h">
+    <ClInclude Include="src\Variables.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

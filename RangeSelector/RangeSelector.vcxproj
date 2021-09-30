@@ -47,8 +47,8 @@
     <ClInclude Include="external\imgui\imstb_truetype.h" />
     <ClInclude Include="external\implot\implot.h" />
     <ClInclude Include="external\implot\implot_internal.h" />
-    <ClInclude Include="src\Constants.h" />
     <ClInclude Include="src\Helpers.h" />
+    <ClInclude Include="src\Variables.h" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
