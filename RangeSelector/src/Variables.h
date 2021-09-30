@@ -1,8 +1,9 @@
 #pragma once
 #include "imgui.h"
+#include "implot.h"
 
 // General Variables & Constants
-const int DOUBLE_PRECISION = 9;
+//const int DOUBLE_PRECISION = 9;
 
 
 

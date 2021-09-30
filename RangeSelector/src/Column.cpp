@@ -1,5 +1,4 @@
-#ifndef COLUMN
-#define COLUMN
+#pragma once
 
 #include <string>
 #include <vector>
@@ -11,5 +10,3 @@ public:
 	std::string name;
 	std::vector<double> values;
 };
-
-#endif

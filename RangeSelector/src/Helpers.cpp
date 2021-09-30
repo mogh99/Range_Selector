@@ -4,7 +4,8 @@
 
 #include "Data.cpp"
 #include "Range.cpp"
-#include "Variables.h"
+
+const int DOUBLE_PRECISION = 9;
 
 Data parseCSVFile(std::string fileName) {
 

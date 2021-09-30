@@ -1,5 +1,4 @@
-#ifndef DATA
-#define DATA
+#pragma once
 
 #include <string>
 #include <vector>
@@ -13,5 +12,3 @@ public:
 	std::string fileName;
 	std::vector<Column> columns;
 };
-
-#endif
