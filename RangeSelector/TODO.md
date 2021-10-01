@@ -6,6 +6,7 @@
 5. Add file browser to all the user to read csv files.
 6. Add help/How to use window
 7. Allow the user to select scatter or line
+8. Conver unix time to normal date and display it in the selected ranges table
 
 ### Info:
 * RapidMiner date format MM/DD/YY HH:MM AM/PM

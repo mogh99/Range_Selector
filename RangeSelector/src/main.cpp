@@ -106,7 +106,7 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
-		//ImGui::ShowDemoWindow();
+		//ImPlot::ShowDemoWindow();
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -128,7 +128,7 @@ int main() {
 
 			// Check if the plot is queried or not
 			if (ImPlot::IsPlotQueried()) {
-				ImPlotLimits queriedLimit = ImPlot::GetPlotQuery();
+				queriedLimit = ImPlot::GetPlotQuery();
 
 				// TODO: Fix the hardcoding calculation of the datesDifference
 				int datesDifference = normalData.columns.at(6).values[0] - normalData.columns.at(6).values[1];
@@ -161,10 +161,12 @@ int main() {
 
 		// Section2: The small zoom window and The selected ranges table
 		if (ImPlot::BeginSubplots("SECTION2", SECTION2_ROWS, SECTION2_COLS, section2Size, SECTION2_SUBPLOT_FLAGS, SECTION2_ROWS_RATIOS, SECTION2_COLS_RATIOS)) {
-		// Zoom window
+			// Zoom window
+			if (isPlotQueried)
+				ImPlot::SetNextPlotLimits(queriedLimit.X.Min, queriedLimit.X.Max, queriedLimit.Y.Min, queriedLimit.Y.Max, ImGuiCond_Always);
+
 			if (ImPlot::BeginPlot("", NULL, NULL, ImVec2(), ImPlotFlags_NoLegend, ImPlotAxisFlags_Time)) {
 				if (isPlotQueried) {
-					//ImPlot::SetNextPlotLimits(-1,1,-1,1);
 					for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
 						// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
 						ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
@@ -173,10 +175,33 @@ int main() {
 				ImPlot::EndPlot();
 			}
 
+			tableSize.x = (section2Size.x/2) - TABLE_MARGINS;
+			tableSize.y = (section2Size.y) - TABLE_MARGINS;
+
 			// Selected Ranges Table
+			if (ImGui::BeginTable("table1", TABLE_COLS, TABLE_FLAGS, tableSize)){
+				ImGui::TableSetupColumn("ID");
+				ImGui::TableSetupColumn("Start Date");
+				ImGui::TableSetupColumn("End Date");
+				ImGui::TableSetupColumn("Delete");
+				ImGui::TableHeadersRow();
 
+				int numberOfSelectedRanges = 1;
+				for (Range range : ranges) {
+					ImGui::TableNextColumn();
+					ImGui::Text(std::to_string(numberOfSelectedRanges).c_str());
+					ImGui::TableNextColumn();
+					ImGui::Text(std::to_string(range.startDate).c_str());
+					ImGui::TableNextColumn();
+					ImGui::Text(std::to_string(range.endDate).c_str());
+					ImGui::TableNextColumn();
+					ImGui::Text("DELETEBUTTON");
+					numberOfSelectedRanges += 1;
+				}
+				ImGui::EndTable();
+			}
 
-			// Update Section2 hegith
+			// Update Section2 height
 			section2Size.y = imguiWindowHeight / 3;
 
 			ImPlot::EndSubplots();
