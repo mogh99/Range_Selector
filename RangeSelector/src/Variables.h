@@ -43,9 +43,10 @@ const ImPlotFlags SECTION1_FLAGS = (ImPlotFlags_Query | ImPlotFlags_NoTitle);
 // Section2: A subplot of two windows, the small zoom window and The selected ranges table
 // 1. Section2 Variables
 ImVec2 section2Size;
-bool isRangeSelected;
+bool isPlotQueried;
 
 // 2. Section2 Constants
+ImPlotSubplotFlags SECTION2_SUBPLOT_FLAGS = (ImPlotSubplotFlags_NoResize | ImPlotSubplotFlags_NoTitle);
 const int SECTION2_ROWS = 1;
 const int SECTION2_COLS = 2;
 static float SECTION2_ROWS_RATIOS[] = { 1.0, 1.0 };

@@ -95,90 +95,104 @@ int main() {
 	section1Size = ImVec2(-1, imguiWindowWidth / 2);
 	// Section2: A subplot of two windows, the small zoom window and The selected ranges table
 	section2Size = ImVec2(-1, imguiWindowWidth / 3);
-	isRangeSelected = false;
-	
+	isPlotQueried = false;
+
 	while (!glfwWindowShouldClose(window)) {
-		
-			glfwPollEvents();
 
-			// Start the Dear ImGui frame
-			ImGui_ImplOpenGL3_NewFrame();
-			ImGui_ImplGlfw_NewFrame();
-			ImGui::NewFrame();
-			ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
-			//ImPlot::ShowDemoWindow();
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		glfwPollEvents();
 
-			// Set the window position to (0, 0) top left corner
-			ImGui::SetWindowPos(IMGUI_WINDOW_POS, 0);
+		// Start the Dear ImGui frame
+		ImGui_ImplOpenGL3_NewFrame();
+		ImGui_ImplGlfw_NewFrame();
+		ImGui::NewFrame();
+		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
+		//ImGui::ShowDemoWindow();
 
-			// Get the new window size incase of user modifications and update the imgui size
-			glfwGetWindowSize(window, &imguiWindowWidth, &imguiWindowHeight);
-			imguiWindowSize.x = imguiWindowWidth;
-			imguiWindowSize.y = imguiWindowHeight;
-			ImGui::SetWindowSize(imguiWindowSize, 0);
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
-			// Section1: The main plot
-			if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
-				for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
-					// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
-					ImPlot::PlotScatter(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+		// Set the window position to (0, 0) top left corner
+		ImGui::SetWindowPos(IMGUI_WINDOW_POS, 0);
+
+		// Get the new window size incase of user modifications and update the imgui size
+		glfwGetWindowSize(window, &imguiWindowWidth, &imguiWindowHeight);
+		imguiWindowSize.x = imguiWindowWidth;
+		imguiWindowSize.y = imguiWindowHeight;
+		ImGui::SetWindowSize(imguiWindowSize, 0);
+
+		// Section1: The main plot
+		if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
+			for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
+				// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
+				ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+			}
+
+			// Check if the plot is queried or not
+			if (ImPlot::IsPlotQueried()) {
+				ImPlotLimits queriedLimit = ImPlot::GetPlotQuery();
+
+				// TODO: Fix the hardcoding calculation of the datesDifference
+				int datesDifference = normalData.columns.at(6).values[0] - normalData.columns.at(6).values[1];
+
+				int startDate = floorUnixTime((int)queriedLimit.X.Min, datesDifference);
+				int endDate = ceilUnixTime((int)queriedLimit.X.Max, datesDifference);
+
+				// TODO: Fix the hardcoding selection of the timestamp column
+				int startIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), startDate));
+				int endIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), endDate));
+
+				Range newRange = { startDate, endDate, startIdx, endIdx };
+				// Remove the quired range if enter was pressed.
+				if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter))) {
+					deleteUnwantedRange(&normalData, &newRange);
+					ranges.push_back(newRange);
 				}
 
-				// Check if the plot is queried or not
-				if (ImPlot::IsPlotQueried()) {
-					ImPlotLimits queriedLimit = ImPlot::GetPlotQuery();
+				isPlotQueried = true;
+			}
+			else
+				isPlotQueried = false;
 
-					int startDate = (int)queriedLimit.X.Min - (int)queriedLimit.X.Min % 3600;
-					int endDate = (int) queriedLimit.X.Max + (3600 - (int)queriedLimit.X.Max % 3600);
 
-					int startIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), startDate));
-					int endIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), endDate));
+			// Update Section1 hegith
+			section1Size.y = imguiWindowHeight / 2;
 
-					std::cout << "start idx = " << startIdx << ", X Min = " << queriedLimit.X.Min << std::endl;
-					std::cout << "end idx = " << endIdx << ", X Max = " << queriedLimit.X.Max << std::endl;
+			ImPlot::EndPlot();
+		}
 
-					isRangeSelected = true;
+		// Section2: The small zoom window and The selected ranges table
+		if (ImPlot::BeginSubplots("SECTION2", SECTION2_ROWS, SECTION2_COLS, section2Size, SECTION2_SUBPLOT_FLAGS, SECTION2_ROWS_RATIOS, SECTION2_COLS_RATIOS)) {
+		// Zoom window
+			if (ImPlot::BeginPlot("", NULL, NULL, ImVec2(), ImPlotFlags_NoLegend, ImPlotAxisFlags_Time)) {
+				if (isPlotQueried) {
+					//ImPlot::SetNextPlotLimits(-1,1,-1,1);
+					for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
+						// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
+						ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+					}
 				}
-				else 
-					isRangeSelected = false;
-				
-
-				// Update Section1 hegith
-				section1Size.y = imguiWindowHeight / 2;
-
 				ImPlot::EndPlot();
 			}
-			
-			// Section2: The small zoom window and The selected ranges table
-			if (ImPlot::BeginSubplots("SECTION2", SECTION2_ROWS, SECTION2_COLS, section2Size, ImPlotSubplotFlags_NoTitle, SECTION2_ROWS_RATIOS, SECTION2_COLS_RATIOS)) {
-				if (ImPlot::BeginPlot("", NULL, NULL, ImVec2(), ImPlotFlags_NoLegend, ImPlotAxisFlags_Time)) {
-					if (isRangeSelected) {
-						for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
-							// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
-							ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
-						}
-					}
-					ImPlot::EndPlot();
-				}
 
-				// Update Section2 hegith
-				section2Size.y = imguiWindowHeight / 3;
+			// Selected Ranges Table
 
-				ImPlot::EndSubplots();
-			}
 
-			ImGui::End();
+			// Update Section2 hegith
+			section2Size.y = imguiWindowHeight / 3;
 
-			// Rendering
-			ImGui::Render();
-			int display_w, display_h;
-			glfwGetFramebufferSize(window, &display_w, &display_h);
-			glViewport(0, 0, display_w, display_h);
-			glClearColor(backgroundColor.x * backgroundColor.w, backgroundColor.y * backgroundColor.w, backgroundColor.z * backgroundColor.w, backgroundColor.w);
-			glClear(GL_COLOR_BUFFER_BIT);
-			ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-			glfwSwapBuffers(window);
-			glfwWaitEvents();
+			ImPlot::EndSubplots();
+		}
+
+		ImGui::End();
+
+		// Rendering
+		ImGui::Render();
+		int display_w, display_h;
+		glfwGetFramebufferSize(window, &display_w, &display_h);
+		glViewport(0, 0, display_w, display_h);
+		glClearColor(backgroundColor.x * backgroundColor.w, backgroundColor.y * backgroundColor.w, backgroundColor.z * backgroundColor.w, backgroundColor.w);
+		glClear(GL_COLOR_BUFFER_BIT);
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+		glfwSwapBuffers(window);
+		glfwWaitEvents();
 	}
 }

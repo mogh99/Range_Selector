@@ -117,3 +117,27 @@ void undoSelectedRange(Data* data, Data* normalData, std::vector<Range>* ranges,
 		deleteUnwantedRange(normalData, &ranges->at(i));
 	}
 }
+
+/*
+* When selecting the dates ranges from the main plot.
+* The program get the max and min as the new selected range.
+* However, the issue is the max/startDate and min/endDate 
+* are not excatly in the data.columns.timestamp values
+* As a result, some modification need to be done to get the result right.
+* 
+* Example:
+* datesDifference = data.columns.timestamp[1] - data.columns.timestamp[0] = 13600 - 10000 = 3600
+* max/startDate = 15313
+* min/endDate = 31567
+* The max/startDate and min/endDate are not following the pattern increase by datesDifference which is in this case = 3600
+* 
+* floor(max/startDate=15313) = 14400
+* ceil(min/endDate=31567) = 32400
+*/
+int floorUnixTime(int startDate, int datesDifference) {
+	return startDate - (startDate % datesDifference);
+}
+
+int ceilUnixTime(int endDate, int datesDifference) {
+	return endDate + (datesDifference - (endDate % datesDifference));
+}

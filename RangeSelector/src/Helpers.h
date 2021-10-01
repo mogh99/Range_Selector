@@ -7,3 +7,5 @@ void writeCSVFile(std::string filePath, Data data);
 // Managing ranges
 void deleteUnwantedRange(Data* normalData, Range* selectedRange);
 void undoSelectedRange(Data* data, Data* normalData, std::vector<Range>* ranges, Range* undoRange);
+int floorUnixTime(int startDate, int datesDifference);
+int ceilUnixTime(int endDate, int datesDifference);

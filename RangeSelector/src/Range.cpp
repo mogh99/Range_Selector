@@ -6,8 +6,8 @@
 
 class Range {
 public:
-	float startDate;
-	float endDate;
+	int startDate;
+	int endDate;
 	int startIdx;
 	int endIdx;
 
