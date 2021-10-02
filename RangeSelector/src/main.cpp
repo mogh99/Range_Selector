@@ -106,7 +106,7 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
-		//ImGui::ShowDemoWindow();
+		ImGui::ShowDemoWindow();
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -143,8 +143,13 @@ int main() {
 				Range newRange = { startDate, endDate, startIdx, endIdx };
 				// Remove the quired range if enter was pressed.
 				if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter))) {
-					deleteUnwantedRange(&normalData, &newRange);
-					ranges.push_back(newRange);
+					if (startIdx != normalData.numberOfRows && endIdx != normalData.numberOfRows) {
+						deleteUnwantedRange(&normalData, &newRange);
+						ranges.push_back(newRange);
+					}
+					else {
+					
+					}
 				}
 
 				isPlotQueried = true;
@@ -224,6 +229,6 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);
-		glfwWaitEvents();
+		//glfwWaitEvents();
 	}
 }
