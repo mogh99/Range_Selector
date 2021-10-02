@@ -106,7 +106,7 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
-		//ImPlot::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -175,6 +175,7 @@ int main() {
 				ImPlot::EndPlot();
 			}
 
+			// Update the table sizes
 			tableSize.x = (section2Size.x/2) - TABLE_MARGINS;
 			tableSize.y = (section2Size.y) - TABLE_MARGINS;
 
@@ -187,7 +188,9 @@ int main() {
 				ImGui::TableHeadersRow();
 
 				int numberOfSelectedRanges = 1;
+
 				for (Range range : ranges) {
+					ImGui::PushID(numberOfSelectedRanges);
 					ImGui::TableNextColumn();
 					ImGui::Text(std::to_string(numberOfSelectedRanges).c_str());
 					ImGui::TableNextColumn();
@@ -195,7 +198,10 @@ int main() {
 					ImGui::TableNextColumn();
 					ImGui::Text(std::to_string(range.endDate).c_str());
 					ImGui::TableNextColumn();
-					ImGui::Text("DELETEBUTTON");
+					if (ImGui::SmallButton("Undo")) {
+						undoSelectedRange(&data, &normalData, &ranges, &range);
+					}
+					ImGui::PopID();
 					numberOfSelectedRanges += 1;
 				}
 				ImGui::EndTable();
