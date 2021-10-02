@@ -4,6 +4,7 @@
 
 // General Variables & Constants
 const int DOUBLE_PRECISION = 9;
+bool isPlotLine = true;
 
 // Main window Variables & Constants
 // 1. Variables

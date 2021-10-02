@@ -107,6 +107,19 @@ int main() {
 		ImGui::NewFrame();
 		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
 		ImGui::ShowDemoWindow();
+		if (ImGui::BeginMenuBar()) {
+			if (ImGui::BeginMenu("Menu")) {
+				ImGui::MenuItem("Plot Type", NULL, false, false);
+				if (ImGui::MenuItem("Line Plot")) {
+					isPlotLine = true;
+				}
+				if (ImGui::MenuItem("Scatter Plot")) {
+					isPlotLine = false;
+				}
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -123,7 +136,10 @@ int main() {
 		if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
 			for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
 				// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
-				ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+				if(isPlotLine)
+					ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+				else
+					ImPlot::PlotScatter(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
 			}
 
 			// Check if the plot is queried or not
@@ -174,7 +190,10 @@ int main() {
 				if (isPlotQueried) {
 					for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
 						// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
-						ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+						if(isPlotLine)
+							ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+						else
+							ImPlot::PlotScatter(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
 					}
 				}
 				ImPlot::EndPlot();
