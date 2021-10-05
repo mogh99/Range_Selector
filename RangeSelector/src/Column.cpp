@@ -5,7 +5,7 @@
 
 class Column {
 public:
-	bool isTimeStamp = false;
+	bool isTimestamp = false;
 	int colIdx;
 	std::string name;
 	std::vector<double> values;

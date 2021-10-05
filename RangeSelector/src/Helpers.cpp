@@ -31,6 +31,8 @@ Data parseCSVFile(std::string fileName) {
 		int idx = 0;
 		while (std::getline(ss, colname, ',')) {
 			data.columns.push_back({ TIMESTAMP.compare(colname) ? false : true, idx, colname, std::vector<double> {} });
+			if (!TIMESTAMP.compare(colname))
+				data.timestampIdx = idx;
 			idx += 1;
 		}
 		data.numberOfColumns = idx;
@@ -43,7 +45,7 @@ Data parseCSVFile(std::string fileName) {
 
 		while (ss >> val) {
 			// Divide the timestamp date by 1000 to be compatible with ImPlot
-			if (data.columns.at(colIdx).isTimeStamp) {
+			if (data.columns.at(colIdx).isTimestamp) {
 				data.columns.at(colIdx).values.push_back(val / 1000);
 			}
 			else {
@@ -78,7 +80,7 @@ void writeCSVFile(std::string filePath, Data data) {
 	for (int i = 0; i < data.numberOfRows; ++i) {
 		for (int j = 0; j < data.numberOfColumns; ++j) {
 			// Multiply the timestamp date by 1000 to be compatible with RapidMiner
-			if (data.columns.at(j).isTimeStamp) {
+			if (data.columns.at(j).isTimestamp) {
 				file << std::setprecision(DOUBLE_PRECISION) << data.columns.at(j).values.at(i) * 1000;
 			}
 			else {

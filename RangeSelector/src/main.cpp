@@ -29,7 +29,7 @@ int main() {
 	std::cout.precision(DOUBLE_PRECISION);
 
 	// Reading the data as Data object
-	std::string fileName = "ExampleSet.csv";
+	std::string fileName = "ExampleSetTest.csv";
 	Data data = parseCSVFile(fileName);
 	Data normalData = data;
 	std::vector<Range> ranges;
@@ -134,27 +134,37 @@ int main() {
 
 		// Section1: The main plot
 		if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
-			for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
-				// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
-				if(isPlotLine)
-					ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
-				else
-					ImPlot::PlotScatter(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+			for (int i = 0; i < normalData.numberOfColumns; i++) {
+				if (normalData.timestampIdx != i) {
+					if(isPlotLine)
+						ImPlot::PlotLine(normalData.columns.at(i).name.data(), 
+										&normalData.columns.at(normalData.timestampIdx).values[0],
+										&normalData.columns.at(i).values[0],
+										normalData.numberOfRows);
+					else
+						ImPlot::PlotScatter(normalData.columns.at(i).name.data(), 
+											&normalData.columns.at(normalData.timestampIdx).values[0], 
+											&normalData.columns.at(i).values[0],
+											normalData.numberOfRows);
+				}
 			}
 
 			// Check if the plot is queried or not
 			if (ImPlot::IsPlotQueried()) {
 				queriedLimit = ImPlot::GetPlotQuery();
 
-				// TODO: Fix the hardcoding calculation of the datesDifference
-				int datesDifference = normalData.columns.at(6).values[0] - normalData.columns.at(6).values[1];
+				int datesDifference = normalData.columns.at(normalData.timestampIdx).values[0] - normalData.columns.at(normalData.timestampIdx).values[1];
 
 				int startDate = floorUnixTime((int)queriedLimit.X.Min, datesDifference);
 				int endDate = ceilUnixTime((int)queriedLimit.X.Max, datesDifference);
 
-				// TODO: Fix the hardcoding selection of the timestamp column
-				int startIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), startDate));
-				int endIdx = std::distance(normalData.columns.at(6).values.begin(), std::find(normalData.columns.at(6).values.begin(), normalData.columns.at(6).values.end(), endDate));
+				int startIdx = std::distance(normalData.columns.at(normalData.timestampIdx).values.begin(),
+											std::find(normalData.columns.at(normalData.timestampIdx).values.begin(),
+											normalData.columns.at(normalData.timestampIdx).values.end(), startDate));
+
+				int endIdx = std::distance(normalData.columns.at(normalData.timestampIdx).values.begin(),
+										  std::find(normalData.columns.at(normalData.timestampIdx).values.begin(),
+										  normalData.columns.at(normalData.timestampIdx).values.end(), endDate));
 
 				Range newRange = { startDate, endDate, startIdx, endIdx };
 				// Remove the quired range if enter was pressed.
@@ -163,16 +173,15 @@ int main() {
 						deleteUnwantedRange(&normalData, &newRange);
 						ranges.push_back(newRange);
 					}
+					// TODO: Add popup error message
 					else {
-					
+
 					}
 				}
-
 				isPlotQueried = true;
 			}
 			else
 				isPlotQueried = false;
-
 
 			// Update Section1 hegith
 			section1Size.y = imguiWindowHeight / 2;
@@ -189,11 +198,18 @@ int main() {
 			if (ImPlot::BeginPlot("", NULL, NULL, ImVec2(), ImPlotFlags_NoLegend, ImPlotAxisFlags_Time)) {
 				if (isPlotQueried) {
 					for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
-						// TODO: Remove the hardcoding of the timestamp location when using file browser to read the csv file.
-						if(isPlotLine)
-							ImPlot::PlotLine(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
-						else
-							ImPlot::PlotScatter(normalData.columns.at(i).name.data(), &normalData.columns.at(6).values[0], &normalData.columns.at(i).values[0], normalData.numberOfRows);
+						if (normalData.timestampIdx != i) {
+							if (isPlotLine)
+								ImPlot::PlotLine(normalData.columns.at(i).name.data(),
+									&normalData.columns.at(normalData.timestampIdx).values[0],
+									&normalData.columns.at(i).values[0],
+									normalData.numberOfRows);
+							else
+								ImPlot::PlotScatter(normalData.columns.at(i).name.data(),
+									&normalData.columns.at(normalData.timestampIdx).values[0],
+									&normalData.columns.at(i).values[0],
+									normalData.numberOfRows);
+						}
 					}
 				}
 				ImPlot::EndPlot();

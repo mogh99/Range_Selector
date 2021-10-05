@@ -9,6 +9,7 @@ class Data {
 public:
 	int numberOfRows;
 	int numberOfColumns;
+	int timestampIdx;
 	std::string fileName;
 	std::vector<Column> columns;
 };
