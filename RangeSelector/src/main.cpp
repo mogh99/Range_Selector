@@ -29,7 +29,7 @@ int main() {
 	std::cout.precision(DOUBLE_PRECISION);
 
 	// Reading the data as Data object
-	std::string fileName = "ExampleSetTest.csv";
+	std::string fileName = "ExampleSet.csv";
 	Data data = parseCSVFile(fileName);
 	Data normalData = data;
 	std::vector<Range> ranges;
@@ -98,6 +98,8 @@ int main() {
 	isPlotQueried = false;
 
 	while (!glfwWindowShouldClose(window)) {
+		if (saveFile)
+			break;
 
 		glfwPollEvents();
 
@@ -106,22 +108,8 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
-		ImGui::ShowDemoWindow();
-		if (ImGui::BeginMenuBar()) {
-			if (ImGui::BeginMenu("Menu")) {
-				ImGui::MenuItem("Plot Type", NULL, false, false);
-				if (ImGui::MenuItem("Line Plot")) {
-					isPlotLine = true;
-				}
-				if (ImGui::MenuItem("Scatter Plot")) {
-					isPlotLine = false;
-				}
-				ImGui::EndMenu();
-			}
-			ImGui::EndMenuBar();
-		}
-
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		//ImGui::ShowDemoWindow();
+		//ImPlot::ShowDemoWindow();
 
 		// Set the window position to (0, 0) top left corner
 		ImGui::SetWindowPos(IMGUI_WINDOW_POS, 0);
@@ -131,6 +119,35 @@ int main() {
 		imguiWindowSize.x = imguiWindowWidth;
 		imguiWindowSize.y = imguiWindowHeight;
 		ImGui::SetWindowSize(imguiWindowSize, 0);
+
+		if (ImGui::BeginMenuBar()) {
+			if (ImGui::BeginMenu("Menu")) {
+				if (ImGui::MenuItem("New File")) {
+				}
+				if (ImGui::MenuItem("Save File")) {
+					saveFile = true;
+				}
+				ImGui::EndMenu();
+			}
+			if (ImGui::BeginMenu("Preferences")) {
+				ImGui::MenuItem("Plot Type", NULL, false, false);
+				if (ImGui::MenuItem("Line Plot")) {
+					isPlotLine = true;
+				}
+				if (ImGui::MenuItem("Scatter Plot")) {
+					isPlotLine = false;
+				}
+				ImGui::MenuItem("Style", NULL, false, false);
+				ImGui::ShowStyleSelector("");
+				ImGui::MenuItem("Time", NULL, false, false);
+				ImGui::Checkbox("Use ISO 8601", &ImPlot::GetStyle().UseISO8601);
+				ImGui::Checkbox("Use 24 Hour Clock", &ImPlot::GetStyle().Use24HourClock);
+				ImGui::EndMenu();
+			}
+			ImGui::EndMenuBar();
+		}
+
+		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
 		// Section1: The main plot
 		if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
@@ -264,6 +281,10 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);
-		//glfwWaitEvents();
+		glfwWaitEvents();
 	}
+
+	std::string newFilePath = "ExampleSetNew.csv";
+	if (saveFile)
+		writeCSVFile(newFilePath, normalData);
 }
