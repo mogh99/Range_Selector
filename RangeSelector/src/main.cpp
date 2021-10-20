@@ -7,6 +7,8 @@
 
 #include "implot.h"
 
+#include "ImFileDialog.h"
+
 #include <GLFW/glfw3.h>
 
 #if defined(_MSC_VER) && (_MSC_VER >= 1900) && !defined(IMGUI_DISABLE_WIN32_FUNCTIONS)
@@ -23,6 +25,26 @@ static void glfw_error_callback(int error, const char* description)
 {
 	fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
+
+ifd::FileDialog::Instance().CreateTexture = [](uint8_t* data, int w, int h, char fmt) -> void* {
+	GLuint tex;
+
+	glGenTextures(1, &tex);
+	glBindTexture(GL_TEXTURE_2D, tex);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, (fmt == 0) ? GL_BGRA : GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glGenerateMipmap(GL_TEXTURE_2D);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return (void*)tex;
+};
+ifd::FileDialog::Instance().DeleteTexture = [](void* tex) {
+	GLuint texID = (GLuint)tex;
+	glDeleteTextures(1, &texID);
+};
 
 int main() {
 	// Set the reading and writing precision to 
@@ -108,7 +130,7 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
-		//ImGui::ShowDemoWindow();
+		ImGui::ShowDemoWindow();
 		//ImPlot::ShowDemoWindow();
 
 		// Set the window position to (0, 0) top left corner
@@ -146,6 +168,26 @@ int main() {
 			}
 			ImGui::EndMenuBar();
 		}
+
+		// Show a popup window if the selected range is either outside the full range or has been selected
+		if (errorWrongSelectedRange) {
+			ImGui::OpenPopup("ERROR?");
+			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+
+			if (ImGui::BeginPopupModal("ERROR?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			{
+				ImGui::Text("The selected range is either \noutside the full range, or has been selected!!\n\n");
+				ImGui::Separator();
+
+				if (ImGui::Button("OK", ImVec2(120, 0))) { 
+					ImGui::CloseCurrentPopup();
+					errorWrongSelectedRange = false;
+				}
+				ImGui::EndPopup();
+			}
+		}
+
 
 		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 
@@ -190,9 +232,8 @@ int main() {
 						deleteUnwantedRange(&normalData, &newRange);
 						ranges.push_back(newRange);
 					}
-					// TODO: Add popup error message
 					else {
-
+						errorWrongSelectedRange = true;
 					}
 				}
 				isPlotQueried = true;
@@ -205,7 +246,7 @@ int main() {
 
 			ImPlot::EndPlot();
 		}
-
+		
 		// Section2: The small zoom window and The selected ranges table
 		if (ImPlot::BeginSubplots("SECTION2", SECTION2_ROWS, SECTION2_COLS, section2Size, SECTION2_SUBPLOT_FLAGS, SECTION2_ROWS_RATIOS, SECTION2_COLS_RATIOS)) {
 			// Zoom window
@@ -281,7 +322,7 @@ int main() {
 		glClear(GL_COLOR_BUFFER_BIT);
 		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 		glfwSwapBuffers(window);
-		glfwWaitEvents();
+		//glfwWaitEvents();
 	}
 
 	std::string newFilePath = "ExampleSetNew.csv";
