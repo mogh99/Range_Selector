@@ -22,9 +22,6 @@
     <Filter Include="backend">
       <UniqueIdentifier>{11a9f653-4e7d-4fa2-ae2e-96daea41b8b5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ImFileDialog">
-      <UniqueIdentifier>{d2255e1b-8b64-4b3f-94de-44f9b0abfc76}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -72,9 +69,6 @@
     <ClCompile Include="src\Helpers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="external\ImFileDialog\ImFileDialog.cpp">
-      <Filter>ImFileDialog</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="external\imgui\imgui_impl_glfw.h">
@@ -115,12 +109,6 @@
     </ClInclude>
     <ClInclude Include="src\Variables.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="external\ImFileDialog\ImFileDialog.h">
-      <Filter>ImFileDialog</Filter>
-    </ClInclude>
-    <ClInclude Include="external\ImFileDialog\stb_image.h">
-      <Filter>ImFileDialog</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
