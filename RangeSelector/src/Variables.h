@@ -7,6 +7,13 @@ const int DOUBLE_PRECISION = 9;
 bool isPlotLine = true;
 bool saveFile = false;
 bool errorWrongSelectedRange = false;
+bool isDateLoaded = false;
+
+// Data Varaibles
+std::string fileName;
+std::vector<Range> ranges;
+Data data;
+Data normalData = data;
 
 // Main window Variables & Constants
 // 1. Variables

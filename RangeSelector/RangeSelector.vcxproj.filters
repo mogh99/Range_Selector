@@ -22,6 +22,9 @@
     <Filter Include="backend">
       <UniqueIdentifier>{11a9f653-4e7d-4fa2-ae2e-96daea41b8b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="imfilebrowser">
+      <UniqueIdentifier>{49ebf974-cc9d-4dad-b7d6-8d1aebdc3d29}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -109,6 +112,9 @@
     </ClInclude>
     <ClInclude Include="src\Variables.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="external\imfilebrowser\imfilebrowser.h">
+      <Filter>imfilebrowser</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -2,12 +2,11 @@
 #include <string>
 
 #include "imgui.h"
+#include "imfilebrowser.h";
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h"
 
 #include "implot.h"
-
-#include "ImFileDialog.h"
 
 #include <GLFW/glfw3.h>
 
@@ -29,12 +28,6 @@ static void glfw_error_callback(int error, const char* description)
 int main() {
 	// Set the reading and writing precision to 
 	std::cout.precision(DOUBLE_PRECISION);
-
-	// Reading the data as Data object
-	std::string fileName = "ExampleSet.csv";
-	Data data = parseCSVFile(fileName);
-	Data normalData = data;
-	std::vector<Range> ranges;
 
 	// Setup window
 	glfwSetErrorCallback(glfw_error_callback);
@@ -99,6 +92,11 @@ int main() {
 	section2Size = ImVec2(-1, imguiWindowWidth / 3);
 	isPlotQueried = false;
 
+	// Create a file browser instance
+	ImGui::FileBrowser fileDialog = ImGui::FileBrowser();
+	fileDialog.SetTitle("File Browser");
+	fileDialog.SetTypeFilters({ ".*", ".csv" });
+
 	while (!glfwWindowShouldClose(window)) {
 		if (saveFile)
 			break;
@@ -110,7 +108,7 @@ int main() {
 		ImGui_ImplGlfw_NewFrame();
 		ImGui::NewFrame();
 		ImGui::Begin("MAIN_WINDOW", NULL, IMGUI_WINDOW_FLAGS);
-		ImGui::ShowDemoWindow();
+		//ImGui::ShowDemoWindow();
 		//ImPlot::ShowDemoWindow();
 
 		// Set the window position to (0, 0) top left corner
@@ -122,9 +120,20 @@ int main() {
 		imguiWindowSize.y = imguiWindowHeight;
 		ImGui::SetWindowSize(imguiWindowSize, 0);
 
+		fileDialog.Display();
+
+		if (fileDialog.HasSelected()) {
+			isDateLoaded = true;
+			fileName = fileDialog.GetSelected().string();
+			data = parseCSVFile(fileName);
+			normalData = data;
+			fileDialog.ClearSelected();
+		}
+
 		if (ImGui::BeginMenuBar()) {
 			if (ImGui::BeginMenu("Menu")) {
 				if (ImGui::MenuItem("New File")) {
+					fileDialog.Open();
 				}
 				if (ImGui::MenuItem("Save File")) {
 					saveFile = true;
@@ -149,148 +158,149 @@ int main() {
 			ImGui::EndMenuBar();
 		}
 
-		// Show a popup window if the selected range is either outside the full range or has been selected
-		if (errorWrongSelectedRange) {
-			ImGui::OpenPopup("ERROR?");
-			ImVec2 center = ImGui::GetMainViewport()->GetCenter();
-			ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		if (isDateLoaded) {
+			// Show a popup window if the selected range is either outside the full range or has been selected
+			if (errorWrongSelectedRange) {
+				ImGui::OpenPopup("ERROR?");
+				ImVec2 center = ImGui::GetMainViewport()->GetCenter();
+				ImGui::SetNextWindowPos(center, ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 
-			if (ImGui::BeginPopupModal("ERROR?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-			{
-				ImGui::Text("The selected range is either \noutside the full range, or has been selected!!\n\n");
-				ImGui::Separator();
+				if (ImGui::BeginPopupModal("ERROR?", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+				{
+					ImGui::Text("The selected range is either \noutside the full range, or has been selected!!\n\n");
+					ImGui::Separator();
 
-				if (ImGui::Button("OK", ImVec2(120, 0))) { 
-					ImGui::CloseCurrentPopup();
-					errorWrongSelectedRange = false;
-				}
-				ImGui::EndPopup();
-			}
-		}
-
-
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-		// Section1: The main plot
-		if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
-			for (int i = 0; i < normalData.numberOfColumns; i++) {
-				if (normalData.timestampIdx != i) {
-					if(isPlotLine)
-						ImPlot::PlotLine(normalData.columns.at(i).name.data(), 
-										&normalData.columns.at(normalData.timestampIdx).values[0],
-										&normalData.columns.at(i).values[0],
-										normalData.numberOfRows);
-					else
-						ImPlot::PlotScatter(normalData.columns.at(i).name.data(), 
-											&normalData.columns.at(normalData.timestampIdx).values[0], 
-											&normalData.columns.at(i).values[0],
-											normalData.numberOfRows);
-				}
-			}
-
-			// Check if the plot is queried or not
-			if (ImPlot::IsPlotQueried()) {
-				queriedLimit = ImPlot::GetPlotQuery();
-
-				int datesDifference = normalData.columns.at(normalData.timestampIdx).values[0] - normalData.columns.at(normalData.timestampIdx).values[1];
-
-				int startDate = floorUnixTime((int)queriedLimit.X.Min, datesDifference);
-				int endDate = ceilUnixTime((int)queriedLimit.X.Max, datesDifference);
-
-				int startIdx = std::distance(normalData.columns.at(normalData.timestampIdx).values.begin(),
-											std::find(normalData.columns.at(normalData.timestampIdx).values.begin(),
-											normalData.columns.at(normalData.timestampIdx).values.end(), startDate));
-
-				int endIdx = std::distance(normalData.columns.at(normalData.timestampIdx).values.begin(),
-										  std::find(normalData.columns.at(normalData.timestampIdx).values.begin(),
-										  normalData.columns.at(normalData.timestampIdx).values.end(), endDate));
-
-				Range newRange = { startDate, endDate, startIdx, endIdx };
-				// Remove the quired range if enter was pressed.
-				if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter))) {
-					if (startIdx != normalData.numberOfRows && endIdx != normalData.numberOfRows) {
-						deleteUnwantedRange(&normalData, &newRange);
-						ranges.push_back(newRange);
+					if (ImGui::Button("OK", ImVec2(120, 0))) {
+						ImGui::CloseCurrentPopup();
+						errorWrongSelectedRange = false;
 					}
-					else {
-						errorWrongSelectedRange = true;
+					ImGui::EndPopup();
+				}
+			}
+
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+			// Section1: The main plot
+			if (ImPlot::BeginPlot("SECTION1", NULL, NULL, section1Size, SECTION1_FLAGS, ImPlotAxisFlags_Time)) {
+				for (int i = 0; i < normalData.numberOfColumns; i++) {
+					if (normalData.timestampIdx != i) {
+						if (isPlotLine)
+							ImPlot::PlotLine(normalData.columns.at(i).name.data(),
+								&normalData.columns.at(normalData.timestampIdx).values[0],
+								&normalData.columns.at(i).values[0],
+								normalData.numberOfRows);
+						else
+							ImPlot::PlotScatter(normalData.columns.at(i).name.data(),
+								&normalData.columns.at(normalData.timestampIdx).values[0],
+								&normalData.columns.at(i).values[0],
+								normalData.numberOfRows);
 					}
 				}
-				isPlotQueried = true;
-			}
-			else
-				isPlotQueried = false;
 
-			// Update Section1 hegith
-			section1Size.y = imguiWindowHeight / 2;
+				// Check if the plot is queried or not
+				if (ImPlot::IsPlotQueried()) {
+					queriedLimit = ImPlot::GetPlotQuery();
 
-			ImPlot::EndPlot();
-		}
-		
-		// Section2: The small zoom window and The selected ranges table
-		if (ImPlot::BeginSubplots("SECTION2", SECTION2_ROWS, SECTION2_COLS, section2Size, SECTION2_SUBPLOT_FLAGS, SECTION2_ROWS_RATIOS, SECTION2_COLS_RATIOS)) {
-			// Zoom window
-			if (isPlotQueried)
-				ImPlot::SetNextPlotLimits(queriedLimit.X.Min, queriedLimit.X.Max, queriedLimit.Y.Min, queriedLimit.Y.Max, ImGuiCond_Always);
+					int datesDifference = normalData.columns.at(normalData.timestampIdx).values[0] - normalData.columns.at(normalData.timestampIdx).values[1];
 
-			if (ImPlot::BeginPlot("", NULL, NULL, ImVec2(), ImPlotFlags_NoLegend, ImPlotAxisFlags_Time)) {
-				if (isPlotQueried) {
-					for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
-						if (normalData.timestampIdx != i) {
-							if (isPlotLine)
-								ImPlot::PlotLine(normalData.columns.at(i).name.data(),
-									&normalData.columns.at(normalData.timestampIdx).values[0],
-									&normalData.columns.at(i).values[0],
-									normalData.numberOfRows);
-							else
-								ImPlot::PlotScatter(normalData.columns.at(i).name.data(),
-									&normalData.columns.at(normalData.timestampIdx).values[0],
-									&normalData.columns.at(i).values[0],
-									normalData.numberOfRows);
+					int startDate = floorUnixTime((int)queriedLimit.X.Min, datesDifference);
+					int endDate = ceilUnixTime((int)queriedLimit.X.Max, datesDifference);
+
+					int startIdx = std::distance(normalData.columns.at(normalData.timestampIdx).values.begin(),
+						std::find(normalData.columns.at(normalData.timestampIdx).values.begin(),
+							normalData.columns.at(normalData.timestampIdx).values.end(), startDate));
+
+					int endIdx = std::distance(normalData.columns.at(normalData.timestampIdx).values.begin(),
+						std::find(normalData.columns.at(normalData.timestampIdx).values.begin(),
+							normalData.columns.at(normalData.timestampIdx).values.end(), endDate));
+
+					Range newRange = { startDate, endDate, startIdx, endIdx };
+					// Remove the quired range if enter was pressed.
+					if (ImGui::IsKeyPressed(ImGui::GetKeyIndex(ImGuiKey_Enter))) {
+						if (startIdx != normalData.numberOfRows && endIdx != normalData.numberOfRows) {
+							deleteUnwantedRange(&normalData, &newRange);
+							ranges.push_back(newRange);
+						}
+						else {
+							errorWrongSelectedRange = true;
 						}
 					}
+					isPlotQueried = true;
 				}
+				else
+					isPlotQueried = false;
+
+				// Update Section1 hegith
+				section1Size.y = imguiWindowHeight / 2;
+
 				ImPlot::EndPlot();
 			}
 
-			// Update the table sizes
-			tableSize.x = (section2Size.x/2) - TABLE_MARGINS;
-			tableSize.y = (section2Size.y) - TABLE_MARGINS;
+			// Section2: The small zoom window and The selected ranges table
+			if (ImPlot::BeginSubplots("SECTION2", SECTION2_ROWS, SECTION2_COLS, section2Size, SECTION2_SUBPLOT_FLAGS, SECTION2_ROWS_RATIOS, SECTION2_COLS_RATIOS)) {
+				// Zoom window
+				if (isPlotQueried)
+					ImPlot::SetNextPlotLimits(queriedLimit.X.Min, queriedLimit.X.Max, queriedLimit.Y.Min, queriedLimit.Y.Max, ImGuiCond_Always);
 
-			// Selected Ranges Table
-			if (ImGui::BeginTable("table1", TABLE_COLS, TABLE_FLAGS, tableSize)){
-				ImGui::TableSetupColumn("ID");
-				ImGui::TableSetupColumn("Start Date");
-				ImGui::TableSetupColumn("End Date");
-				ImGui::TableSetupColumn("Delete");
-				ImGui::TableHeadersRow();
-
-				int numberOfSelectedRanges = 1;
-
-				for (Range range : ranges) {
-					ImGui::PushID(numberOfSelectedRanges);
-					ImGui::TableNextColumn();
-					ImGui::Text(std::to_string(numberOfSelectedRanges).c_str());
-					ImGui::TableNextColumn();
-					ImGui::Text(std::to_string(range.startDate).c_str());
-					ImGui::TableNextColumn();
-					ImGui::Text(std::to_string(range.endDate).c_str());
-					ImGui::TableNextColumn();
-					if (ImGui::SmallButton("Undo")) {
-						undoSelectedRange(&data, &normalData, &ranges, &range);
+				if (ImPlot::BeginPlot("", NULL, NULL, ImVec2(), ImPlotFlags_NoLegend, ImPlotAxisFlags_Time)) {
+					if (isPlotQueried) {
+						for (int i = 0; i < normalData.numberOfColumns - 1; i++) {
+							if (normalData.timestampIdx != i) {
+								if (isPlotLine)
+									ImPlot::PlotLine(normalData.columns.at(i).name.data(),
+										&normalData.columns.at(normalData.timestampIdx).values[0],
+										&normalData.columns.at(i).values[0],
+										normalData.numberOfRows);
+								else
+									ImPlot::PlotScatter(normalData.columns.at(i).name.data(),
+										&normalData.columns.at(normalData.timestampIdx).values[0],
+										&normalData.columns.at(i).values[0],
+										normalData.numberOfRows);
+							}
+						}
 					}
-					ImGui::PopID();
-					numberOfSelectedRanges += 1;
+					ImPlot::EndPlot();
 				}
-				ImGui::EndTable();
+
+				// Update the table sizes
+				tableSize.x = (section2Size.x / 2) - TABLE_MARGINS;
+				tableSize.y = (section2Size.y) - TABLE_MARGINS;
+
+				// Selected Ranges Table
+				if (ImGui::BeginTable("table1", TABLE_COLS, TABLE_FLAGS, tableSize)) {
+					ImGui::TableSetupColumn("ID");
+					ImGui::TableSetupColumn("Start Date");
+					ImGui::TableSetupColumn("End Date");
+					ImGui::TableSetupColumn("Delete");
+					ImGui::TableHeadersRow();
+
+					int numberOfSelectedRanges = 1;
+
+					for (Range range : ranges) {
+						ImGui::PushID(numberOfSelectedRanges);
+						ImGui::TableNextColumn();
+						ImGui::Text(std::to_string(numberOfSelectedRanges).c_str());
+						ImGui::TableNextColumn();
+						ImGui::Text(std::to_string(range.startDate).c_str());
+						ImGui::TableNextColumn();
+						ImGui::Text(std::to_string(range.endDate).c_str());
+						ImGui::TableNextColumn();
+						if (ImGui::SmallButton("Undo")) {
+							undoSelectedRange(&data, &normalData, &ranges, &range);
+						}
+						ImGui::PopID();
+						numberOfSelectedRanges += 1;
+					}
+					ImGui::EndTable();
+				}
+
+				// Update Section2 height
+				section2Size.y = imguiWindowHeight / 3;
+
+				ImPlot::EndSubplots();
 			}
-
-			// Update Section2 height
-			section2Size.y = imguiWindowHeight / 3;
-
-			ImPlot::EndSubplots();
 		}
-
 		ImGui::End();
 
 		// Rendering
@@ -305,7 +315,8 @@ int main() {
 		//glfwWaitEvents();
 	}
 
-	std::string newFilePath = "ExampleSetNew.csv";
+	std::string newFilePath = fileDialog.GetSelected().string()+"\\NewExampleSet.csv";
+	std::cout << newFilePath << std::endl;
 	if (saveFile)
 		writeCSVFile(newFilePath, normalData);
 }
